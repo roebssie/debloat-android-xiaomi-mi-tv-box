@@ -128,7 +128,7 @@ public class MainActivity extends Activity {
       if (!dream && SystemClock.uptimeMillis() < splashUntil) { drawStartup(c); postInvalidateOnAnimation(); c.restore(); return; }
       c.drawColor(Color.rgb(19,24,29));
       Bitmap bg = dream && snoopySaver != null ? snoopySaver : snoopy;
-      if (bg != null) { Rect src=new Rect(0,0,bg.getWidth(),bg.getHeight()); float scale=Math.max((float)w/bg.getWidth(),(float)h/bg.getHeight()); float dw=bg.getWidth()*scale, dh=bg.getHeight()*scale; RectF dst=new RectF((w-dw)*.5f,(h-dh)*.5f-(dream?0:20), (w+dw)*.5f,(h+dh)*.5f-(dream?0:20)); p.setAlpha(dream?255:150); c.drawBitmap(bg,src,dst,p); if(!dream && dst.bottom<h){ Rect tail=new Rect(0,Math.max(0,bg.getHeight()-24),bg.getWidth(),bg.getHeight()); c.drawBitmap(bg,tail,new RectF(0,Math.max(0,dst.bottom),w,h),p); } p.setAlpha(255); }
+      if (bg != null) { Rect src=new Rect(0,0,bg.getWidth(),bg.getHeight()); float scale=Math.max((float)w/bg.getWidth(),(float)h/bg.getHeight()); float dw=bg.getWidth()*scale, dh=bg.getHeight()*scale; RectF dst=new RectF((w-dw)*.5f,(h-dh)*.5f-(dream?0:35), (w+dw)*.5f,(h+dh)*.5f-(dream?0:35)); p.setAlpha(dream?255:150); c.drawBitmap(bg,src,dst,p); if(!dream && dst.bottom<h){ Rect tail=new Rect(0,Math.max(0,bg.getHeight()-24),bg.getWidth(),bg.getHeight()); c.drawBitmap(bg,tail,new RectF(0,Math.max(0,dst.bottom),w,h),p); } p.setAlpha(255); }
       p.setColor(Color.WHITE); p.setTypeface(Typeface.create("sans",Typeface.NORMAL));
       if (dream) { if(MainActivity.sharedMedia.playing) drawMediaBanner(c,MainActivity.sharedMedia,28,68,260,80,mediaFocused); drawWeatherBanner(c,28,164,134,60); drawClock(c,77,300,49); drawAirplay(c,145,300,.4f); c.restore(); postInvalidateDelayed(1000); return; }
       p.setTextAlign(Paint.Align.LEFT); p.setTextSize(22); c.drawText("Poef", 28, 40, p); p.setTextSize(11); p.setColor(Color.LTGRAY); String brand="Roebssie's TV OS"; c.drawText(brand,29,58,p); float brandEnd=29+p.measureText(brand); p.setTextSize(6); c.drawText("®",brandEnd+1,51,p);
@@ -143,9 +143,9 @@ public class MainActivity extends Activity {
       c.drawColor(Color.rgb(10,18,31));
       long elapsed = SystemClock.uptimeMillis(); float sweep = -160 + ((elapsed % 1500L) / 1500f) * 960f;
       p.setTextAlign(Paint.Align.CENTER); p.setTypeface(Typeface.create("sans",Typeface.NORMAL)); p.setTextSize(28); p.setColor(Color.WHITE); p.setShader(null);
-      String bootBrand="Roebssie's TV OS"; c.drawText(bootBrand,320,176,p); float bootEnd=320+p.measureText(bootBrand)/2f; p.setTextSize(7); c.drawText("®",bootEnd+1,168,p);
+      String bootBrand="Roebssie's TV OS"; c.drawText(bootBrand,320,176,p); float bootEnd=320+p.measureText(bootBrand)/2f; p.setTextSize(7); c.drawText("®",bootEnd+4,168,p);
       p.setTextSize(9); p.setColor(Color.rgb(190,210,230)); c.drawText("Preparing your TV experience",320,196,p);
-      p.setShader(new LinearGradient(sweep-90,0,sweep+90,0,Color.TRANSPARENT,Color.WHITE,Shader.TileMode.CLAMP)); p.setTextSize(28); c.drawText(bootBrand,320,176,p); p.setShader(null); p.setTextSize(7); c.drawText("®",bootEnd+1,168,p); p.setTextAlign(Paint.Align.LEFT);
+      p.setShader(new LinearGradient(sweep-90,0,sweep+90,0,Color.TRANSPARENT,Color.WHITE,Shader.TileMode.CLAMP)); p.setTextSize(28); c.drawText(bootBrand,320,176,p); p.setShader(null); p.setTextSize(7); c.drawText("®",bootEnd+4,168,p); p.setTextAlign(Paint.Align.LEFT);
     }
     void drawAppCard(Canvas c,int x,int y,int i,boolean focus){
       p.setStyle(Paint.Style.FILL); p.setShader(null); p.setShadowLayer(focus?12:4,0,6,Color.argb(focus?190:100,0,0,0));
@@ -162,11 +162,9 @@ public class MainActivity extends Activity {
     }
     void drawWeatherIcon(Canvas c,float x,float y,float r){
       if(!weatherAvailable){
-        p.setStyle(Paint.Style.FILL); p.setColor(Color.rgb(224,239,247));
-        c.drawCircle(x-r*.40f,y+r*.08f,r*.34f,p); c.drawCircle(x-r*.03f,y-r*.16f,r*.48f,p); c.drawCircle(x+r*.36f,y+r*.08f,r*.30f,p);
-        c.drawRoundRect(new RectF(x-r*.70f,y+r*.02f,x+r*.58f,y+r*.38f),r*.18f,r*.18f,p);
-        p.setStyle(Paint.Style.STROKE); p.setStrokeCap(Paint.Cap.ROUND); p.setStrokeWidth(Math.max(1.6f,r*.16f)); p.setColor(Color.rgb(100,120,134));
-        Path cloud=new Path(); cloud.moveTo(x-r*.68f,y+r*.20f); cloud.quadTo(x-r*.65f,y-r*.12f,x-r*.36f,y-r*.08f); cloud.quadTo(x-r*.22f,y-r*.57f,x+r*.10f,y-r*.43f); cloud.quadTo(x+r*.35f,y-r*.48f,x+r*.40f,y-r*.08f); cloud.quadTo(x+r*.68f,y-r*.12f,x+r*.66f,y+r*.20f); cloud.lineTo(x+r*.66f,y+r*.30f); cloud.lineTo(x-r*.68f,y+r*.30f); cloud.close(); c.drawPath(cloud,p);
+        Path cloud=new Path(); cloud.moveTo(x-r*.68f,y+r*.20f); cloud.quadTo(x-r*.65f,y-r*.12f,x-r*.36f,y-r*.08f); cloud.quadTo(x-r*.22f,y-r*.57f,x+r*.10f,y-r*.43f); cloud.quadTo(x+r*.35f,y-r*.48f,x+r*.40f,y-r*.08f); cloud.quadTo(x+r*.68f,y-r*.12f,x+r*.66f,y+r*.20f); cloud.lineTo(x+r*.66f,y+r*.30f); cloud.lineTo(x-r*.68f,y+r*.30f); cloud.close();
+        p.setStyle(Paint.Style.FILL); p.setColor(Color.rgb(224,239,247)); c.drawPath(cloud,p);
+        p.setStyle(Paint.Style.STROKE); p.setStrokeCap(Paint.Cap.ROUND); p.setStrokeWidth(Math.max(1.6f,r*.16f)); p.setColor(Color.rgb(100,120,134)); c.drawPath(cloud,p);
         p.setStyle(Paint.Style.FILL); return;
       }
       boolean clear=weatherCode<=1;
@@ -190,11 +188,9 @@ public class MainActivity extends Activity {
         p.setStyle(Paint.Style.STROKE); p.setStrokeWidth(Math.max(1.2f,1.6f*k)); p.setColor(Color.rgb(67,94,116)); c.drawPath(crescent,p);
       }
       if(!clear || partly || rain || snow || storm){
-        p.setStyle(Paint.Style.FILL); p.setColor(cloudFill);
-        c.drawCircle(x-r*.40f,y+r*.08f,r*.34f,p); c.drawCircle(x-r*.03f,y-r*.16f,r*.48f,p); c.drawCircle(x+r*.36f,y+r*.08f,r*.30f,p);
-        c.drawRoundRect(new RectF(x-r*.70f,y+r*.02f,x+r*.58f,y+r*.38f),r*.18f,r*.18f,p);
-        p.setStyle(Paint.Style.STROKE); p.setStrokeCap(Paint.Cap.ROUND); p.setStrokeWidth(Math.max(1.6f,2.1f*k)); p.setColor(outline);
-        Path cloud=new Path(); cloud.moveTo(x-r*.68f,y+r*.20f); cloud.quadTo(x-r*.65f,y-r*.12f,x-r*.36f,y-r*.08f); cloud.quadTo(x-r*.22f,y-r*.57f,x+r*.10f,y-r*.43f); cloud.quadTo(x+r*.35f,y-r*.48f,x+r*.40f,y-r*.08f); cloud.quadTo(x+r*.68f,y-r*.12f,x+r*.66f,y+r*.20f); cloud.lineTo(x+r*.66f,y+r*.30f); cloud.lineTo(x-r*.68f,y+r*.30f); cloud.close(); c.drawPath(cloud,p);
+        Path cloud=new Path(); cloud.moveTo(x-r*.68f,y+r*.20f); cloud.quadTo(x-r*.65f,y-r*.12f,x-r*.36f,y-r*.08f); cloud.quadTo(x-r*.22f,y-r*.57f,x+r*.10f,y-r*.43f); cloud.quadTo(x+r*.35f,y-r*.48f,x+r*.40f,y-r*.08f); cloud.quadTo(x+r*.68f,y-r*.12f,x+r*.66f,y+r*.20f); cloud.lineTo(x+r*.66f,y+r*.30f); cloud.lineTo(x-r*.68f,y+r*.30f); cloud.close();
+        p.setStyle(Paint.Style.FILL); p.setColor(cloudFill); c.drawPath(cloud,p);
+        p.setStyle(Paint.Style.STROKE); p.setStrokeCap(Paint.Cap.ROUND); p.setStrokeWidth(Math.max(1.6f,2.1f*k)); p.setColor(outline); c.drawPath(cloud,p);
         if(storm){
           p.setStyle(Paint.Style.FILL); p.setColor(Color.rgb(255,205,43)); Path bolt=new Path(); bolt.moveTo(x+r*.08f,y+r*.28f); bolt.lineTo(x-r*.12f,y+r*.72f); bolt.lineTo(x+r*.06f,y+r*.68f); bolt.lineTo(x-r*.02f,y+r*1.06f); bolt.lineTo(x+r*.30f,y+r*.52f); bolt.lineTo(x+r*.10f,y+r*.56f); bolt.close(); c.drawPath(bolt,p);
         } else if(rain){

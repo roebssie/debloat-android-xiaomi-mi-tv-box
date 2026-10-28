@@ -11,7 +11,7 @@ import android.view.accessibility.AccessibilityEvent;
 public class AirplayAccessibility extends AccessibilityService {
   private static final String SIDEPLAY = "io.github.sudnep.sideplay";
   private static final long MENU_CHECK_DELAY_MS = 40L;
-  private static final long MENU_CHECK_WINDOW_MS = 700L;
+  private static final long MENU_CHECK_WINDOW_MS = 1200L;
   private static final long DISMISS_COOLDOWN_MS = 200L;
   private final Handler handler = new Handler(Looper.getMainLooper());
   private long lastDismissAt;
@@ -36,6 +36,10 @@ public class AirplayAccessibility extends AccessibilityService {
     AccessibilityNodeInfo root=activeRoot();
     if(root==null){ if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS); return; }
     if(containsVideoSurface(root)) return;
+    if(!hasReceiverLabel(root)){
+      if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS);
+      return;
+    }
     lastDismissAt=now;
     Intent home=new Intent(Intent.ACTION_MAIN);
     home.addCategory(Intent.CATEGORY_HOME);
@@ -65,7 +69,7 @@ public class AirplayAccessibility extends AccessibilityService {
   boolean hasReceiverLabel(AccessibilityNodeInfo node){
     if(node==null)return false;
     String value=readText(node);
-    if(value.contains("sideplay") || value.contains("screen mirror") ||
+    if(value.contains("poef") || value.contains("sideplay") || value.contains("screen mirror") ||
        value.contains("screen mirroring") || value.contains("receiver") ||
        value.contains("waiting for") || value.equals("ready") ||
        value.contains("is ready") ||

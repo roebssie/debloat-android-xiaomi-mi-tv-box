@@ -16,7 +16,7 @@ public class AirplayGuard extends Service {
         Intent home=new Intent(Intent.ACTION_MAIN); home.addCategory(Intent.CATEGORY_HOME); home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_NO_ANIMATION); startActivity(home);
       }
     } catch(Exception ignored){}
-    handler.postDelayed(this,350);
+    handler.postDelayed(this,20);
   }};
   public void onCreate(){ super.onCreate(); handler.post(check); }
   public int onStartCommand(Intent intent,int flags,int startId){ return START_STICKY; }

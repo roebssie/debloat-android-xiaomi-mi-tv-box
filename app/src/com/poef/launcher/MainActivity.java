@@ -48,7 +48,7 @@ public class MainActivity extends Activity {
       boolean sideplayTop=!tasks.isEmpty() && tasks.get(0).topActivity!=null && "io.github.sudnep.sideplay".equals(tasks.get(0).topActivity.getPackageName());
       if(sideplayTop){
         Intent home=new Intent(Intent.ACTION_MAIN); home.addCategory(Intent.CATEGORY_HOME); home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_NO_ANIMATION); startActivity(home);
-        airplayHandoffHandler.postDelayed(this,350);
+        airplayHandoffHandler.postDelayed(this,20);
       }
     }catch(Exception ignored){}
   }};
@@ -113,7 +113,7 @@ public class MainActivity extends Activity {
   void mediaPrevious(){ if(spotifyController!=null)spotifyController.getTransportControls().skipToPrevious(); }
   void resetIdleSaver(){ if(inSaver || leavingForApp) return; idleHandler.removeCallbacks(idleSaver); idleHandler.postDelayed(idleSaver,300000); }
   void exitIdleSaver(){ if(!inSaver) return; inSaver=false; setContentView(new PoefView(this,false,false)); resetIdleSaver(); }
-  protected void onPause() { super.onPause(); if(!leavingForApp&&!PoefDream.active) airplayHandoffHandler.postDelayed(airplayHandoff,180); }
+  protected void onPause() { super.onPause(); if(!leavingForApp&&!PoefDream.active) airplayHandoffHandler.postDelayed(airplayHandoff,20); }
   protected void onResume() { super.onResume(); airplayHandoffHandler.removeCallbacks(airplayHandoff); leavingForApp=false; resetIdleSaver(); }
   protected void onDestroy() { if(instance==this)instance=null; airplayHandoffHandler.removeCallbacks(airplayHandoff); idleHandler.removeCallbacks(idleSaver); mediaHandler.removeCallbacks(mediaPoll); super.onDestroy(); }
   static class PoefView extends View {

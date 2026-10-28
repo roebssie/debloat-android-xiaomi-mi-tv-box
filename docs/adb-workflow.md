@@ -34,6 +34,8 @@ adb shell appops get io.github.sudnep.sideplay
 
 Expected state: Poef Home is resumed, Sideplay is only a background AirPlay service, and picture-in-picture is denied so its visible activity cannot take over.
 
+The launcher uses two layers for the AirPlay handoff: an accessibility window guard that returns Home immediately when Sideplay reports a visible window, plus a 20 ms task-state fallback. The receiver service stays enabled; only its visible activity is sent away.
+
 ## Verification checklist
 
 - Reboot: Xiaomi/Android firmware screens may appear before third-party apps; after that, Poef should be the first app screen.
@@ -42,3 +44,4 @@ Expected state: Poef Home is resumed, Sideplay is only a background AirPlay serv
 - Audio-only AirPlay uses the compact `AirPlay audio` banner and never a full-screen Sideplay menu.
 - Five-minute idle transition to `PoefDream`.
 - No fatal launcher exception or ANR in logcat.
+- Repeated Sideplay handoff attempts return to Poef Home while the AirPlay service remains foreground-active.

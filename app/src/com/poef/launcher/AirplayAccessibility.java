@@ -27,6 +27,7 @@ public class AirplayAccessibility extends AccessibilityService {
   private long lastDismissAt;
   private long menuDeadline;
   private long videoSurfaceSince;
+  private boolean videoWasActive;
   private WindowManager windowManager;
   private HomeMask homeMask;
   private final Runnable menuCheck = new Runnable(){ public void run(){ dismissIdleMenuIfPresent(); }};
@@ -50,6 +51,7 @@ public class AirplayAccessibility extends AccessibilityService {
     AccessibilityNodeInfo root=activeRoot();
     if(root==null){ if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS); else deactivateHomeMask(); return; }
     if(containsVideoSurface(root)){
+      videoWasActive=true;
       if(videoSurfaceSince==0) videoSurfaceSince=now;
       if(now-videoSurfaceSince<120){ handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS); return; }
       deactivateHomeMask();
@@ -64,9 +66,12 @@ public class AirplayAccessibility extends AccessibilityService {
     if(!sideplayAudioActive()){
       if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS);
       else {
-        lastDismissAt=now;
-        goHome();
-        releaseHomeMaskLater();
+        if(videoWasActive){
+          videoWasActive=false;
+          lastDismissAt=now;
+          goHome();
+          releaseHomeMaskLater();
+        } else deactivateHomeMask();
       }
       return;
     }

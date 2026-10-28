@@ -35,6 +35,7 @@ This capture was taken from the running box after the AirPlay guard and final la
 - Pretoria North weather with condition-aware icons.
 - Square glass Wi-Fi tile; dark when idle and white when focused.
 - AirPlay service kept in the background; visible Sideplay/AirPlay menus return to Poef Home.
+- Integrated and configured AirPlay receiver service with a Poef-side guard that keeps audio quiet while allowing a real video mirror surface to render.
 - Audio-only AirPlay uses a compact banner containing only a dark AirPlay mark and `AirPlay audio`.
 - Five-minute custom screensaver with clock, weather, AirPlay mark, and optional media banner.
 - Boot receiver opens Poef Home only; it does not open Wi-Fi settings or Sideplay’s visible activity.
@@ -54,6 +55,7 @@ This project records the practical skills I used while building and validating t
 | Android TV development | Java launcher work, Android activities, boot receivers, dream/screen-saver services, focus navigation and remote-key handling |
 | ADB over Wi‑Fi | Connecting to the box, inspecting activities and services, capturing screenshots, installing builds and running repeatable device checks |
 | Android services | Keeping AirPlay available in the background while preventing its visible activity from taking over the home screen |
+| AirPlay integration | Configured the receiver service, implemented the Poef-side menu guard, preserved the working audio path, and validated a live 1080p Mac mirror surface |
 | Accessibility APIs | A tightly scoped window guard that returns Home only when the AirPlay receiver’s visible page appears |
 | Media integration | Notification listeners, MediaSession metadata, Spotify artwork, track details, progress and playback controls |
 | UI rendering | Anti-aliased Canvas/vector-style graphics, glass surfaces, focus states, weather icons, analog clock hands and smooth scrolling text |
@@ -73,6 +75,7 @@ Google documents that Android TV and Google TV homes can show movies, shows, app
 - `app/` — Poef launcher source, manifest, resources, wallpaper, and sounds.
 - `screenshots/` — before/after visual comparison captured from the device.
 - `docs/adb-workflow.md` — safe wireless ADB workflow and verification checklist.
+- `docs/airplay-guard.md` — receiver integration, audio handling, and mirror-surface guard notes.
 
 ## Safety notes
 

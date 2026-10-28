@@ -1,6 +1,6 @@
-# Debloat Android Xiaomi Mi TV Box — Roebssie’s TV OS
+# Debloat Mi Box S — Roebssie’s TV OS
 
-A resource-conscious Android TV launcher for a Xiaomi Mi Box. The goal is a calm, minimal home screen instead of the recommendation-heavy Android TV / Google TV experience.
+A resource-conscious Android TV launcher and debloat project for a Xiaomi Mi Box S. The goal is a calm, minimal home screen instead of the recommendation-heavy Android TV / Google TV experience.
 
 ## Hardware target
 
@@ -21,6 +21,12 @@ The custom launcher focuses on Netflix, Spotify, YouTube, VLC, and Settings. It 
 
 ![Roebssie’s TV OS](screenshots/poef-after.png)
 
+### Current live capture
+
+This capture was taken from the running box after the AirPlay guard and final launcher refinements were installed.
+
+![Debloat Mi Box S live home screen](screenshots/poef-live-current.png)
+
 ## What changed
 
 - Minimal five-app dock with Apple TV-inspired spacing, glass surfaces, shadows, and focus animation.
@@ -32,6 +38,27 @@ The custom launcher focuses on Netflix, Spotify, YouTube, VLC, and Settings. It 
 - Audio-only AirPlay uses a compact banner containing only a dark AirPlay mark and `AirPlay audio`.
 - Five-minute custom screensaver with clock, weather, AirPlay mark, and optional media banner.
 - Boot receiver opens Poef Home only; it does not open Wi-Fi settings or Sideplay’s visible activity.
+
+## The story
+
+I started with a Xiaomi Mi Box S whose stock Android TV home screen was crowded with recommendations, movie rows and services I did not use. I wanted the box to feel intentional: a small set of apps, a calm wallpaper, readable information and a remote-friendly interface that gets out of the way.
+
+I built the Poef launcher around that idea, then kept refining it on the real device. The result is a lightweight personal TV OS with an Apple TV-inspired layout, a Snoopy surf scene, Pretoria North weather, a live clock, quiet AirPlay support and media-aware banners for Spotify. The project also documents the compromises: the box still boots through Xiaomi and Android’s protected startup stages, and its panel remains a 1080p device even when the artwork is rendered sharply.
+
+## Skills demonstrated
+
+This project records the practical skills I used while building and validating the box:
+
+| Area | What I practised |
+| :--- | :--- |
+| Android TV development | Java launcher work, Android activities, boot receivers, dream/screen-saver services, focus navigation and remote-key handling |
+| ADB over Wi‑Fi | Connecting to the box, inspecting activities and services, capturing screenshots, installing builds and running repeatable device checks |
+| Android services | Keeping AirPlay available in the background while preventing its visible activity from taking over the home screen |
+| Accessibility APIs | A tightly scoped window guard that returns Home only when the AirPlay receiver’s visible page appears |
+| Media integration | Notification listeners, MediaSession metadata, Spotify artwork, track details, progress and playback controls |
+| UI rendering | Anti-aliased Canvas/vector-style graphics, glass surfaces, focus states, weather icons, analog clock hands and smooth scrolling text |
+| APK build and debugging | Android resource packaging, uncompressed audio resources, signing, clean reinstall recovery and log-driven troubleshooting |
+| Documentation and release work | Before/after screenshots, comparison notes, safe ADB workflow documentation, Git and GitHub project publishing |
 
 ## Android TV / Google TV context
 

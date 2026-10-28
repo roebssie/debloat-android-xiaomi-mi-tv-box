@@ -225,7 +225,7 @@ public class MainActivity extends Activity {
       drawBubble(c,new RectF(x,y,x+w,y+h),14,150);
       drawWeatherIcon(c,x+22,y+29,11);
       p.setTypeface(Typeface.create("sans",Typeface.NORMAL)); p.setTextAlign(Paint.Align.LEFT); p.setColor(Color.rgb(38,45,54)); p.setTextSize(9); c.drawText("Pretoria North",x+40,y+21,p); p.setTextSize(19); p.setTypeface(Typeface.create("sans",Typeface.BOLD)); c.drawText(weatherAvailable?weatherTemp:"--°",x+40,y+42,p);
-      p.setTypeface(Typeface.create("sans",Typeface.NORMAL)); p.setTextSize(8); p.setColor(Color.rgb(82,88,95)); c.drawText(weatherAvailable?(weatherStale?"stale":"now"):"unavailable",x+40,y+55,p);
+      p.setTypeface(Typeface.create("sans",Typeface.NORMAL)); p.setLetterSpacing(.045f); p.setTextSize(8); p.setColor(Color.rgb(82,88,95)); c.drawText(weatherAvailable?(weatherStale?"stale":"now"):"unavailable",x+40,y+55,p); p.setLetterSpacing(0f);
     }
     void drawMediaBanner(Canvas c,MediaSnapshot m,float x,float y,float w,float h,boolean focus){
       drawBubble(c,new RectF(x,y,x+w,y+h),14,150);

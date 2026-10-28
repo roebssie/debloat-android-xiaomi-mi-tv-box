@@ -136,9 +136,9 @@ public class MainActivity extends Activity {
       c.drawColor(Color.rgb(10,18,31));
       long elapsed = SystemClock.uptimeMillis(); float sweep = -160 + ((elapsed % 1500L) / 1500f) * 960f;
       p.setTextAlign(Paint.Align.CENTER); p.setTypeface(Typeface.create("sans",Typeface.NORMAL)); p.setTextSize(28); p.setColor(Color.WHITE); p.setShader(null);
-      String bootBrand="Roebssie's TV OS"; c.drawText(bootBrand,320,176,p); float bootEnd=320+p.measureText(bootBrand)/2f; p.setTextSize(7); c.drawText("®",bootEnd+2,168,p);
+      String bootBrand="Roebssie's TV OS"; c.drawText(bootBrand,320,176,p); float bootEnd=320+p.measureText(bootBrand)/2f; p.setTextSize(7); c.drawText("®",bootEnd+8,168,p);
       p.setTextSize(9); p.setColor(Color.rgb(190,210,230)); c.drawText("Preparing your TV experience",320,196,p);
-      p.setShader(new LinearGradient(sweep-90,0,sweep+90,0,Color.TRANSPARENT,Color.WHITE,Shader.TileMode.CLAMP)); p.setTextSize(28); c.drawText(bootBrand,320,176,p); p.setShader(null); p.setTextSize(7); c.drawText("®",bootEnd+2,168,p); p.setTextAlign(Paint.Align.LEFT);
+      p.setShader(new LinearGradient(sweep-90,0,sweep+90,0,Color.TRANSPARENT,Color.WHITE,Shader.TileMode.CLAMP)); p.setTextSize(28); c.drawText(bootBrand,320,176,p); p.setShader(null); p.setTextSize(7); c.drawText("®",bootEnd+8,168,p); p.setTextAlign(Paint.Align.LEFT);
     }
     void drawAppCard(Canvas c,int x,int y,int i,boolean focus){
       p.setStyle(Paint.Style.FILL); p.setShader(null); p.setShadowLayer(focus?12:4,0,6,Color.argb(focus?190:100,0,0,0));

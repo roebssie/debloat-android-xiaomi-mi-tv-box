@@ -77,7 +77,7 @@ public class MainActivity extends Activity {
       if(h!=null) h.disconnect();
     }}).start();
   }
-  public void onCreate(Bundle b) { super.onCreate(b); instance=this; getWindow().setFlags(1024,1024); setContentView(new PoefView(this, false)); resetIdleSaver(); startMediaBridge(); }
+  public void onCreate(Bundle b) { super.onCreate(b); instance=this; getWindow().setFlags(1024,1024); try{ startService(new Intent(this,AirplayGuard.class)); }catch(Exception ignored){} setContentView(new PoefView(this, false)); resetIdleSaver(); startMediaBridge(); }
   protected void onNewIntent(Intent intent) { super.onNewIntent(intent); if(intent!=null&&Intent.ACTION_MAIN.equals(intent.getAction())&&intent.hasCategory(Intent.CATEGORY_HOME)){ leavingForApp=false; inSaver=false; setContentView(new PoefView(this,false,false)); resetIdleSaver(); } }
   public boolean onKeyDown(int keyCode, android.view.KeyEvent event) { if(keyCode==android.view.KeyEvent.KEYCODE_HOME&&(inSaver||leavingForApp)){ leavingForApp=false; inSaver=false; setContentView(new PoefView(this,false,false)); resetIdleSaver(); return true; } return super.onKeyDown(keyCode,event); }
   void startMediaBridge(){ try{ mediaSessions=(MediaSessionManager)getSystemService(MEDIA_SESSION_SERVICE); }catch(Exception ignored){} mediaHandler.post(mediaPoll); }

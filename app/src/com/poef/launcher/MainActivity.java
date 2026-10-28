@@ -42,11 +42,13 @@ public class MainActivity extends Activity {
   }
   final Runnable airplayHandoff = new Runnable(){ public void run(){
     try{
-      if(leavingForApp || PoefDream.active || hasWindowFocus()) return;
+      if(leavingForApp || PoefDream.active) return;
       ActivityManager am=(ActivityManager)getSystemService(ACTIVITY_SERVICE);
       java.util.List<ActivityManager.RunningTaskInfo> tasks=am.getRunningTasks(1);
-      if(!tasks.isEmpty() && tasks.get(0).topActivity!=null && "io.github.sudnep.sideplay".equals(tasks.get(0).topActivity.getPackageName())){
+      boolean sideplayTop=!tasks.isEmpty() && tasks.get(0).topActivity!=null && "io.github.sudnep.sideplay".equals(tasks.get(0).topActivity.getPackageName());
+      if(sideplayTop){
         Intent home=new Intent(Intent.ACTION_MAIN); home.addCategory(Intent.CATEGORY_HOME); home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_NO_ANIMATION); startActivity(home);
+        airplayHandoffHandler.postDelayed(this,350);
       }
     }catch(Exception ignored){}
   }};
@@ -87,17 +89,22 @@ public class MainActivity extends Activity {
     }catch(Exception ignored){}
     return false;
   }
+  boolean isSpotifyPackage(String pkg){ return pkg!=null && (pkg.startsWith("com.spotify.tv") || pkg.equals("com.spotify.music") || pkg.startsWith("com.spotify.")); }
+  boolean isPlaying(MediaController m){ try{ PlaybackState s=m.getPlaybackState(); int st=s==null?PlaybackState.STATE_NONE:s.getState(); return st==PlaybackState.STATE_PLAYING||st==PlaybackState.STATE_BUFFERING; }catch(Exception ignored){ return false; } }
   void updateMedia(){
+    MediaController spotifyCandidate=null, airplayCandidate=null;
     MediaController chosen=null;
     boolean airplayAudio=false;
     try{
-      if(mediaSessions!=null){ java.util.List<MediaController> sessions=mediaSessions.getActiveSessions(new ComponentName(this,PoefMediaListener.class)); for(MediaController m:sessions){ if("com.spotify.tv.android".equals(m.getPackageName())){ chosen=m; break; } if("io.github.sudnep.sideplay".equals(m.getPackageName())){ PlaybackState s=m.getPlaybackState(); int st=s==null?PlaybackState.STATE_NONE:s.getState(); if(st==PlaybackState.STATE_PLAYING||st==PlaybackState.STATE_BUFFERING){ chosen=m; airplayAudio=true; } } } }
+      if(mediaSessions!=null){ java.util.List<MediaController> sessions=mediaSessions.getActiveSessions(new ComponentName(this,PoefMediaListener.class)); for(MediaController m:sessions){ if(isSpotifyPackage(m.getPackageName())){ if(spotifyCandidate==null) spotifyCandidate=m; } else if("io.github.sudnep.sideplay".equals(m.getPackageName()) && isPlaying(m)){ airplayCandidate=m; } } }
     }catch(Exception ignored){}
+    if(spotifyCandidate!=null && isPlaying(spotifyCandidate)){ chosen=spotifyCandidate; }
+    else if(airplayCandidate!=null){ chosen=airplayCandidate; airplayAudio=true; }
     spotifyController=chosen;
     if(chosen==null){ media=new MediaSnapshot(false,"","",0,0,null); sharedMedia=media; getWindow().getDecorView().postInvalidate(); return; }
     PlaybackState ps=chosen.getPlaybackState(); int state=ps==null?PlaybackState.STATE_NONE:ps.getState(); boolean playing=state==PlaybackState.STATE_PLAYING||state==PlaybackState.STATE_BUFFERING;
     MediaMetadata md=chosen.getMetadata(); String title=""; String artist=""; long duration=0; Bitmap art=null;
-    if(md!=null){ title=md.getString(MediaMetadata.METADATA_KEY_TITLE); artist=md.getString(MediaMetadata.METADATA_KEY_ARTIST); duration=md.getLong(MediaMetadata.METADATA_KEY_DURATION); art=md.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART); if(art==null) art=md.getBitmap(MediaMetadata.METADATA_KEY_ART); }
+    if(md!=null){ title=md.getString(MediaMetadata.METADATA_KEY_TITLE); if(title==null||title.length()==0) title=md.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE); artist=md.getString(MediaMetadata.METADATA_KEY_ARTIST); if(artist==null||artist.length()==0) artist=md.getString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE); duration=md.getLong(MediaMetadata.METADATA_KEY_DURATION); art=md.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART); if(art==null) art=md.getBitmap(MediaMetadata.METADATA_KEY_ART); if(art==null) art=md.getBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON); }
     if(title==null||title.length()==0) title=airplayAudio?"AirPlay audio":"Spotify"; if(artist==null) artist=""; long position=ps==null?0:Math.max(0,ps.getPosition());
     media=new MediaSnapshot(playing,title,artist,position,duration,art,airplayAudio); sharedMedia=media; getWindow().getDecorView().postInvalidate();
   }
@@ -107,7 +114,7 @@ public class MainActivity extends Activity {
   void resetIdleSaver(){ if(inSaver || leavingForApp) return; idleHandler.removeCallbacks(idleSaver); idleHandler.postDelayed(idleSaver,300000); }
   void exitIdleSaver(){ if(!inSaver) return; inSaver=false; setContentView(new PoefView(this,false,false)); resetIdleSaver(); }
   protected void onPause() { super.onPause(); if(!leavingForApp&&!PoefDream.active) airplayHandoffHandler.postDelayed(airplayHandoff,180); }
-  protected void onResume() { super.onResume(); leavingForApp=false; resetIdleSaver(); }
+  protected void onResume() { super.onResume(); airplayHandoffHandler.removeCallbacks(airplayHandoff); leavingForApp=false; resetIdleSaver(); }
   protected void onDestroy() { if(instance==this)instance=null; airplayHandoffHandler.removeCallbacks(airplayHandoff); idleHandler.removeCallbacks(idleSaver); mediaHandler.removeCallbacks(mediaPoll); super.onDestroy(); }
   static class PoefView extends View {
     Paint p = new Paint(3); Bitmap snoopy, snoopySaver; Drawable[] icons = new Drawable[5]; boolean dream;

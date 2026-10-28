@@ -30,7 +30,7 @@ public class AirplayAccessibility extends AccessibilityService {
   private void dismissIdleMenuIfPresent(){
     long now=SystemClock.uptimeMillis();
     if(now-lastDismissAt < DISMISS_COOLDOWN_MS) return;
-    if(!isDismissibleMenu(getRootInActiveWindow())) return;
+    if(!isDismissibleMenu(activeRoot())) return;
     lastDismissAt=now;
     Intent home=new Intent(Intent.ACTION_MAIN);
     home.addCategory(Intent.CATEGORY_HOME);
@@ -44,12 +44,26 @@ public class AirplayAccessibility extends AccessibilityService {
     return hasReceiverLabel(root) && hasInteractiveControl(root);
   }
 
+  AccessibilityNodeInfo activeRoot(){
+    AccessibilityNodeInfo root=getRootInActiveWindow();
+    if(root!=null)return root;
+    try{
+      java.util.List<android.view.accessibility.AccessibilityWindowInfo> windows=getWindows();
+      if(windows!=null) for(android.view.accessibility.AccessibilityWindowInfo window:windows){
+        AccessibilityNodeInfo candidate=window.getRoot();
+        if(candidate!=null && SIDEPLAY.contentEquals(candidate.getPackageName())) return candidate;
+      }
+    }catch(Exception ignored){}
+    return null;
+  }
+
   boolean hasReceiverLabel(AccessibilityNodeInfo node){
     if(node==null)return false;
     String value=readText(node);
     if(value.contains("sideplay") || value.contains("screen mirror") ||
        value.contains("screen mirroring") || value.contains("receiver") ||
        value.contains("waiting for") || value.equals("ready") ||
+       value.contains("is ready") ||
        value.contains("airplay")) return true;
     for(int i=0;i<node.getChildCount();i++) if(hasReceiverLabel(node.getChild(i))) return true;
     return false;
@@ -89,4 +103,15 @@ public class AirplayAccessibility extends AccessibilityService {
   }
 
   public void onInterrupt(){}
+
+  protected void onServiceConnected(){
+    super.onServiceConnected();
+    android.accessibilityservice.AccessibilityServiceInfo info=getServiceInfo();
+    if(info!=null){
+      info.eventTypes=AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED|AccessibilityEvent.TYPE_WINDOWS_CHANGED|AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED;
+      info.feedbackType=android.accessibilityservice.AccessibilityServiceInfo.FEEDBACK_GENERIC;
+      info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS|android.accessibilityservice.AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS;
+      setServiceInfo(info);
+    }
+  }
 }

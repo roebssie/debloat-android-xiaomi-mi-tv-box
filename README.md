@@ -15,17 +15,17 @@ This was built for my Xiaomi Mi Box S 4K, described here as the circa-2019 box i
 
 ![Stock Android TV-style home screen](screenshots/android-tv-before.png)
 
-### Roebssie’s TV OS
+### Roebssie’s TV OS home screen
 
 The custom launcher focuses on Netflix, Spotify, YouTube, VLC, and Settings. It adds a Snoopy surf wallpaper, Pretoria North weather, a live analog clock, a glass Wi-Fi tile, and a five-minute custom screensaver.
 
-![Roebssie’s TV OS](screenshots/poef-after.png)
+![Roebssie’s TV OS home screen with weather](screenshots/poef-after-snoopy.png)
 
-### Current live capture
+### Custom screensaver
 
-This capture was taken from the running box after the AirPlay guard and final launcher refinements were installed.
+The five-minute idle view keeps the box useful without returning to the stock recommendation feed.
 
-![Debloat Mi Box S live home screen](screenshots/poef-live-current.png)
+![Poef custom screensaver](screenshots/poef-screensaver-current.png)
 
 ## What changed
 
@@ -45,6 +45,12 @@ This capture was taken from the running box after the AirPlay guard and final la
 I started with a Xiaomi Mi Box S whose stock Android TV home screen was crowded with recommendations, movie rows and services I did not use. I wanted the box to feel intentional: a small set of apps, a calm wallpaper, readable information and a remote-friendly interface that gets out of the way.
 
 I built the Poef launcher around that idea, then kept refining it on the real device. The result is a lightweight personal TV OS with an Apple TV-inspired layout, a Snoopy surf scene, Pretoria North weather, a live clock, quiet AirPlay support and media-aware banners for Spotify. The project also documents the compromises: the box still boots through Xiaomi and Android’s protected startup stages, and its panel remains a 1080p device even when the artwork is rendered sharply.
+
+### AirPlay story
+
+I created a custom AirPlay service app that runs on the Mi Box. It stays in the background, keeps the receiver available, and is designed for smooth, high-quality audio and video without letting the receiver screen take over the launcher.
+
+![Poef AirPlay receiver ready screen](screenshots/poef-airplay-ready.png)
 
 ## Skills demonstrated
 

@@ -1,7 +1,6 @@
 package com.poef.launcher;
 
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.graphics.*;
@@ -24,7 +23,6 @@ import java.util.regex.*;
 
 public class MainActivity extends Activity {
   static volatile MainActivity instance;
-  final Handler airplayHandoffHandler = new Handler();
   final Handler idleHandler = new Handler();
   final Handler mediaHandler = new Handler();
   boolean leavingForApp = false;
@@ -40,18 +38,6 @@ public class MainActivity extends Activity {
     MediaSnapshot(boolean p,String t,String a,long pos,long dur,Bitmap b){this(p,t,a,pos,dur,b,false);}
     MediaSnapshot(boolean p,String t,String a,long pos,long dur,Bitmap b,boolean ap){playing=p;title=t;artist=a;position=pos;duration=dur;art=b;airplayAudio=ap;}
   }
-  final Runnable airplayHandoff = new Runnable(){ public void run(){
-    try{
-      if(leavingForApp || PoefDream.active) return;
-      ActivityManager am=(ActivityManager)getSystemService(ACTIVITY_SERVICE);
-      java.util.List<ActivityManager.RunningTaskInfo> tasks=am.getRunningTasks(1);
-      boolean sideplayTop=!tasks.isEmpty() && tasks.get(0).topActivity!=null && "io.github.sudnep.sideplay".equals(tasks.get(0).topActivity.getPackageName());
-      if(sideplayTop){
-        Intent home=new Intent(Intent.ACTION_MAIN); home.addCategory(Intent.CATEGORY_HOME); home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_NO_ANIMATION); startActivity(home);
-        airplayHandoffHandler.postDelayed(this,20);
-      }
-    }catch(Exception ignored){}
-  }};
   static volatile String weatherText = "Pretoria North  •  --°";
   static volatile String weatherTemp = "--°";
   static volatile int weatherCode = 0;
@@ -113,9 +99,9 @@ public class MainActivity extends Activity {
   void mediaPrevious(){ if(spotifyController!=null)spotifyController.getTransportControls().skipToPrevious(); }
   void resetIdleSaver(){ if(inSaver || leavingForApp) return; idleHandler.removeCallbacks(idleSaver); idleHandler.postDelayed(idleSaver,300000); }
   void exitIdleSaver(){ if(!inSaver) return; inSaver=false; setContentView(new PoefView(this,false,false)); resetIdleSaver(); }
-  protected void onPause() { super.onPause(); if(!leavingForApp&&!PoefDream.active) airplayHandoffHandler.postDelayed(airplayHandoff,20); }
-  protected void onResume() { super.onResume(); airplayHandoffHandler.removeCallbacks(airplayHandoff); leavingForApp=false; resetIdleSaver(); }
-  protected void onDestroy() { if(instance==this)instance=null; airplayHandoffHandler.removeCallbacks(airplayHandoff); idleHandler.removeCallbacks(idleSaver); mediaHandler.removeCallbacks(mediaPoll); super.onDestroy(); }
+  protected void onPause() { super.onPause(); }
+  protected void onResume() { super.onResume(); leavingForApp=false; resetIdleSaver(); }
+  protected void onDestroy() { if(instance==this)instance=null; idleHandler.removeCallbacks(idleSaver); mediaHandler.removeCallbacks(mediaPoll); super.onDestroy(); }
   static class PoefView extends View {
     Paint p = new Paint(3); Bitmap snoopy, snoopySaver; Drawable[] icons = new Drawable[5]; boolean dream;
     SoundPool focusSounds; int focusPluck, bootChime, focusStream;

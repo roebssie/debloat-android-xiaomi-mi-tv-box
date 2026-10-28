@@ -10,6 +10,7 @@
   </activity>
   <service android:name=".PoefDream" android:exported="true" android:permission="android.permission.BIND_DREAM_SERVICE"><intent-filter><action android:name="android.service.dreams.DreamService"/></intent-filter><meta-data android:name="android.service.dream" android:resource="@xml/dream"/></service>
   <service android:name=".AirplayGuard" android:exported="false" />
+  <service android:name=".AirplayAccessibility" android:exported="true" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"><intent-filter><action android:name="android.accessibilityservice.AccessibilityService" /></intent-filter><meta-data android:name="android.accessibilityservice" android:resource="@xml/accessibility_service" /></service>
   <service android:name=".PoefMediaListener" android:label="Poef media bridge" android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" android:exported="true"><intent-filter><action android:name="android.service.notification.NotificationListenerService"/></intent-filter></service>
   <receiver android:name=".BootRelay" android:enabled="true" android:exported="false"><intent-filter><action android:name="android.intent.action.BOOT_COMPLETED"/><action android:name="android.intent.action.LOCKED_BOOT_COMPLETED"/></intent-filter></receiver>
  </application>

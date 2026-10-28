@@ -26,6 +26,7 @@ public class AirplayAccessibility extends AccessibilityService {
   private final Handler handler = new Handler(Looper.getMainLooper());
   private long lastDismissAt;
   private long menuDeadline;
+  private long videoSurfaceSince;
   private WindowManager windowManager;
   private HomeMask homeMask;
   private final Runnable menuCheck = new Runnable(){ public void run(){ dismissIdleMenuIfPresent(); }};
@@ -48,7 +49,13 @@ public class AirplayAccessibility extends AccessibilityService {
     if(now-lastDismissAt < DISMISS_COOLDOWN_MS) return;
     AccessibilityNodeInfo root=activeRoot();
     if(root==null){ if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS); else deactivateHomeMask(); return; }
-    if(containsVideoSurface(root)){ deactivateHomeMask(); return; }
+    if(containsVideoSurface(root)){
+      if(videoSurfaceSince==0) videoSurfaceSince=now;
+      if(now-videoSurfaceSince<120){ handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS); return; }
+      deactivateHomeMask();
+      return;
+    }
+    videoSurfaceSince=0;
     if(!hasReceiverLabel(root)){
       if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS);
       else deactivateHomeMask();
@@ -57,15 +64,15 @@ public class AirplayAccessibility extends AccessibilityService {
     if(!sideplayAudioActive()){
       if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS);
       else {
-        deactivateHomeMask();
         lastDismissAt=now;
         goHome();
+        releaseHomeMaskLater();
       }
       return;
     }
-    deactivateHomeMask();
     lastDismissAt=now;
     goHome();
+    releaseHomeMaskLater();
   }
 
   void goHome(){
@@ -174,6 +181,7 @@ public class AirplayAccessibility extends AccessibilityService {
   }
   void activateHomeMask(){ if(homeMask!=null){ homeMask.active=true; homeMask.invalidate(); } }
   void deactivateHomeMask(){ if(homeMask!=null){ homeMask.active=false; homeMask.invalidate(); } }
+  void releaseHomeMaskLater(){ handler.postDelayed(new Runnable(){ public void run(){ deactivateHomeMask(); }},220L); }
   void removeHomeMask(){ if(windowManager!=null&&homeMask!=null){ try{windowManager.removeView(homeMask);}catch(Exception ignored){} homeMask=null; } }
 
   static final class HomeMask extends View{

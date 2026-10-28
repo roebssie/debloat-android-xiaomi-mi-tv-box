@@ -2,9 +2,19 @@ package com.poef.launcher;
 
 import android.accessibilityservice.AccessibilityService;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.view.Gravity;
+import android.view.View;
+import android.view.WindowManager;
+import android.graphics.PixelFormat;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.accessibility.AccessibilityEvent;
 
@@ -16,6 +26,8 @@ public class AirplayAccessibility extends AccessibilityService {
   private final Handler handler = new Handler(Looper.getMainLooper());
   private long lastDismissAt;
   private long menuDeadline;
+  private WindowManager windowManager;
+  private HomeMask homeMask;
   private final Runnable menuCheck = new Runnable(){ public void run(){ dismissIdleMenuIfPresent(); }};
 
   public void onAccessibilityEvent(AccessibilityEvent event){
@@ -25,6 +37,7 @@ public class AirplayAccessibility extends AccessibilityService {
     if(type!=AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
        type!=AccessibilityEvent.TYPE_WINDOWS_CHANGED &&
        type!=AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) return;
+    activateHomeMask();
     menuDeadline=SystemClock.uptimeMillis()+MENU_CHECK_WINDOW_MS;
     handler.removeCallbacks(menuCheck);
     handler.postDelayed(menuCheck, MENU_CHECK_DELAY_MS);
@@ -34,12 +47,19 @@ public class AirplayAccessibility extends AccessibilityService {
     long now=SystemClock.uptimeMillis();
     if(now-lastDismissAt < DISMISS_COOLDOWN_MS) return;
     AccessibilityNodeInfo root=activeRoot();
-    if(root==null){ if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS); return; }
-    if(containsVideoSurface(root)) return;
+    if(root==null){ if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS); else deactivateHomeMask(); return; }
+    if(containsVideoSurface(root)){ deactivateHomeMask(); return; }
     if(!hasReceiverLabel(root)){
       if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS);
+      else deactivateHomeMask();
       return;
     }
+    if(!sideplayAudioActive()){
+      if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS);
+      else deactivateHomeMask();
+      return;
+    }
+    deactivateHomeMask();
     lastDismissAt=now;
     Intent home=new Intent(Intent.ACTION_MAIN);
     home.addCategory(Intent.CATEGORY_HOME);
@@ -108,6 +128,7 @@ public class AirplayAccessibility extends AccessibilityService {
 
   public void onDestroy(){
     handler.removeCallbacks(menuCheck);
+    removeHomeMask();
     super.onDestroy();
   }
 
@@ -115,12 +136,47 @@ public class AirplayAccessibility extends AccessibilityService {
 
   protected void onServiceConnected(){
     super.onServiceConnected();
+    windowManager=(WindowManager)getSystemService(WINDOW_SERVICE);
+    showHomeMask();
     android.accessibilityservice.AccessibilityServiceInfo info=getServiceInfo();
     if(info!=null){
       info.eventTypes=AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED|AccessibilityEvent.TYPE_WINDOWS_CHANGED|AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED;
       info.feedbackType=android.accessibilityservice.AccessibilityServiceInfo.FEEDBACK_GENERIC;
       info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS|android.accessibilityservice.AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS;
       setServiceInfo(info);
+    }
+  }
+
+  boolean sideplayAudioActive(){
+    try{ MainActivity m=MainActivity.instance; return m!=null && m.sideplayAudioActive(); }
+    catch(Exception ignored){ return false; }
+  }
+
+  void showHomeMask(){
+    if(windowManager==null || homeMask!=null) return;
+    homeMask=new HomeMask(this);
+    WindowManager.LayoutParams lp=new WindowManager.LayoutParams(
+      WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT,
+      WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+      WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE|WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE|
+      WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN|WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+      PixelFormat.TRANSLUCENT);
+    lp.gravity=Gravity.TOP|Gravity.LEFT;
+    try{ windowManager.addView(homeMask,lp); }catch(Exception ignored){ homeMask=null; }
+  }
+  void activateHomeMask(){ if(homeMask!=null){ homeMask.active=true; homeMask.invalidate(); } }
+  void deactivateHomeMask(){ if(homeMask!=null){ homeMask.active=false; homeMask.invalidate(); } }
+  void removeHomeMask(){ if(windowManager!=null&&homeMask!=null){ try{windowManager.removeView(homeMask);}catch(Exception ignored){} homeMask=null; } }
+
+  static final class HomeMask extends View{
+    final Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG|Paint.FILTER_BITMAP_FLAG);
+    final Bitmap snoopy; boolean active;
+    HomeMask(android.content.Context c){ super(c); snoopy=BitmapFactory.decodeResource(c.getResources(),R.drawable.snoopy); }
+    protected void onDraw(Canvas c){
+      if(!active)return;
+      int w=getWidth(), h=getHeight(); float s=w/640f; c.save(); c.scale(s,s); w=640; h=360; c.drawColor(Color.rgb(19,24,29));
+      if(snoopy!=null){ Rect src=new Rect(0,0,snoopy.getWidth(),snoopy.getHeight()); float scale=Math.max((float)w/snoopy.getWidth(),(float)h/snoopy.getHeight()); float dw=snoopy.getWidth()*scale, dh=snoopy.getHeight()*scale; paint.setAlpha(255); c.drawBitmap(snoopy,src,new android.graphics.RectF((w-dw)*.5f,(h-dh)*.5f-35,(w+dw)*.5f,(h+dh)*.5f-35),paint); }
+      paint.setColor(Color.WHITE); paint.setTextAlign(Paint.Align.LEFT); paint.setTypeface(android.graphics.Typeface.create("sans",android.graphics.Typeface.NORMAL)); paint.setTextSize(22); c.drawText("Poef",28,40,paint); paint.setTextSize(11); paint.setColor(Color.LTGRAY); c.drawText("Roebssie's TV OS",29,58,paint); paint.setColor(Color.argb(178,175,174,178)); c.drawRoundRect(new android.graphics.RectF(18,230,622,348),22,22,paint); c.restore();
     }
   }
 }

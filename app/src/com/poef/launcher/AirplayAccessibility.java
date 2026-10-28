@@ -21,7 +21,7 @@ import android.view.accessibility.AccessibilityEvent;
 public class AirplayAccessibility extends AccessibilityService {
   private static final String SIDEPLAY = "io.github.sudnep.sideplay";
   private static final long MENU_CHECK_DELAY_MS = 40L;
-  private static final long MENU_CHECK_WINDOW_MS = 1200L;
+  private static final long MENU_CHECK_WINDOW_MS = 1800L;
   private static final long DISMISS_COOLDOWN_MS = 200L;
   private final Handler handler = new Handler(Looper.getMainLooper());
   private long lastDismissAt;
@@ -56,11 +56,19 @@ public class AirplayAccessibility extends AccessibilityService {
     }
     if(!sideplayAudioActive()){
       if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS);
-      else deactivateHomeMask();
+      else {
+        deactivateHomeMask();
+        lastDismissAt=now;
+        goHome();
+      }
       return;
     }
     deactivateHomeMask();
     lastDismissAt=now;
+    goHome();
+  }
+
+  void goHome(){
     Intent home=new Intent(Intent.ACTION_MAIN);
     home.addCategory(Intent.CATEGORY_HOME);
     home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_NO_ANIMATION);
@@ -170,13 +178,12 @@ public class AirplayAccessibility extends AccessibilityService {
 
   static final class HomeMask extends View{
     final Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG|Paint.FILTER_BITMAP_FLAG);
-    final Bitmap snoopy; boolean active;
-    HomeMask(android.content.Context c){ super(c); snoopy=BitmapFactory.decodeResource(c.getResources(),R.drawable.snoopy); }
+    final MainActivity.PoefView homeView; boolean active;
+    HomeMask(android.content.Context c){ super(c); homeView=new MainActivity.PoefView(c,false,false); }
     protected void onDraw(Canvas c){
       if(!active)return;
-      int w=getWidth(), h=getHeight(); float s=w/640f; c.save(); c.scale(s,s); w=640; h=360; c.drawColor(Color.rgb(19,24,29));
-      if(snoopy!=null){ Rect src=new Rect(0,0,snoopy.getWidth(),snoopy.getHeight()); float scale=Math.max((float)w/snoopy.getWidth(),(float)h/snoopy.getHeight()); float dw=snoopy.getWidth()*scale, dh=snoopy.getHeight()*scale; paint.setAlpha(255); c.drawBitmap(snoopy,src,new android.graphics.RectF((w-dw)*.5f,(h-dh)*.5f-35,(w+dw)*.5f,(h+dh)*.5f-35),paint); }
-      paint.setColor(Color.WHITE); paint.setTextAlign(Paint.Align.LEFT); paint.setTypeface(android.graphics.Typeface.create("sans",android.graphics.Typeface.NORMAL)); paint.setTextSize(22); c.drawText("Poef",28,40,paint); paint.setTextSize(11); paint.setColor(Color.LTGRAY); c.drawText("Roebssie's TV OS",29,58,paint); paint.setColor(Color.argb(178,175,174,178)); c.drawRoundRect(new android.graphics.RectF(18,230,622,348),22,22,paint); c.restore();
+      homeView.layout(0,0,getWidth(),getHeight());
+      homeView.draw(c);
     }
   }
 }

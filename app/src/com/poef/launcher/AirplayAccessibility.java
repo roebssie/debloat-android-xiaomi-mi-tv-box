@@ -10,10 +10,12 @@ import android.view.accessibility.AccessibilityEvent;
 
 public class AirplayAccessibility extends AccessibilityService {
   private static final String SIDEPLAY = "io.github.sudnep.sideplay";
-  private static final long MENU_CHECK_DELAY_MS = 450L;
-  private static final long DISMISS_COOLDOWN_MS = 1200L;
+  private static final long MENU_CHECK_DELAY_MS = 40L;
+  private static final long MENU_CHECK_WINDOW_MS = 700L;
+  private static final long DISMISS_COOLDOWN_MS = 200L;
   private final Handler handler = new Handler(Looper.getMainLooper());
   private long lastDismissAt;
+  private long menuDeadline;
   private final Runnable menuCheck = new Runnable(){ public void run(){ dismissIdleMenuIfPresent(); }};
 
   public void onAccessibilityEvent(AccessibilityEvent event){
@@ -23,6 +25,7 @@ public class AirplayAccessibility extends AccessibilityService {
     if(type!=AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
        type!=AccessibilityEvent.TYPE_WINDOWS_CHANGED &&
        type!=AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) return;
+    menuDeadline=SystemClock.uptimeMillis()+MENU_CHECK_WINDOW_MS;
     handler.removeCallbacks(menuCheck);
     handler.postDelayed(menuCheck, MENU_CHECK_DELAY_MS);
   }
@@ -30,7 +33,9 @@ public class AirplayAccessibility extends AccessibilityService {
   private void dismissIdleMenuIfPresent(){
     long now=SystemClock.uptimeMillis();
     if(now-lastDismissAt < DISMISS_COOLDOWN_MS) return;
-    if(!isDismissibleMenu(activeRoot())) return;
+    AccessibilityNodeInfo root=activeRoot();
+    if(root==null){ if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS); return; }
+    if(containsVideoSurface(root)) return;
     lastDismissAt=now;
     Intent home=new Intent(Intent.ACTION_MAIN);
     home.addCategory(Intent.CATEGORY_HOME);
@@ -46,7 +51,7 @@ public class AirplayAccessibility extends AccessibilityService {
 
   AccessibilityNodeInfo activeRoot(){
     AccessibilityNodeInfo root=getRootInActiveWindow();
-    if(root!=null)return root;
+    if(root!=null && SIDEPLAY.contentEquals(root.getPackageName())) return root;
     try{
       java.util.List<android.view.accessibility.AccessibilityWindowInfo> windows=getWindows();
       if(windows!=null) for(android.view.accessibility.AccessibilityWindowInfo window:windows){

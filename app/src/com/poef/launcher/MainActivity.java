@@ -219,7 +219,7 @@ public class MainActivity extends Activity {
         // Audio-only AirPlay uses the same banner size and glass treatment as
         // Spotify, but contains only the AirPlay mark and its label.
         drawAirplay(c,x+w*.38f,y+h*.50f,.58f);
-        p.setTextAlign(Paint.Align.LEFT); p.setTypeface(Typeface.create("sans",Typeface.NORMAL)); p.setTextSize(10); p.setColor(Color.rgb(38,45,54)); c.drawText("AirPlay audio",x+w*.47f,y+h*.56f,p);
+        p.setTextAlign(Paint.Align.LEFT); p.setTypeface(Typeface.create("sans-serif-medium",Typeface.NORMAL)); p.setTextSize(10); p.setColor(Color.rgb(38,45,54)); c.drawText("AirPlay audio",x+w*.47f,y+h*.56f,p);
         p.setTextAlign(Paint.Align.LEFT);
         return;
       }

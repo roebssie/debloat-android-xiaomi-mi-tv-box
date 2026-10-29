@@ -178,11 +178,12 @@ public class AirplayAccessibility extends AccessibilityService {
   }
 
   void goHome(){
-    Intent home=new Intent(this,MainActivity.class);
+    Intent home=new Intent(Intent.ACTION_MAIN);
+    home.addCategory(Intent.CATEGORY_HOME);
     home.putExtra("poef_quick_home",true);
     home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_NO_ANIMATION);
-    try { startActivity(home); }
-    catch(Exception ignored){ performGlobalAction(GLOBAL_ACTION_HOME); }
+    try { startActivity(home); } catch(Exception ignored) {}
+    performGlobalAction(GLOBAL_ACTION_HOME);
   }
 
   boolean isDismissibleMenu(AccessibilityNodeInfo root){

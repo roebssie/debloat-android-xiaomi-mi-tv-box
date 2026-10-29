@@ -108,13 +108,26 @@ public class AirplayAccessibility extends AccessibilityService {
       return;
     }
     if(idleLabelSince==0) idleLabelSince=now;
-    if(hasIdlePageLabel(root) && now-idleLabelSince>=160){
-      videoWasActive=false;
-      audioWasActive=false;
-      idleLabelSince=0;
-      lastDismissAt=now;
-      goHome();
-      releaseHomeMaskLater();
+    if(hasIdlePageLabel(root)){
+      if(videoWasActive || audioWasActive){
+        if(now-idleLabelSince>=160){
+          videoWasActive=false;
+          audioWasActive=false;
+          idleLabelSince=0;
+          lastDismissAt=now;
+          goHome();
+          releaseHomeMaskLater();
+          return;
+        }
+      } else if(now>=menuDeadline){
+        idleLabelSince=0;
+        lastDismissAt=now;
+        goHome();
+        releaseHomeMaskLater();
+        return;
+      }
+      if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS);
+      else deactivateHomeMask();
       return;
     }
     // Once video or audio has ended, dismiss a stable receiver-ready page promptly.
@@ -176,7 +189,7 @@ public class AirplayAccessibility extends AccessibilityService {
     String value=readText(node);
     if(value.contains("poef is ready") || value.contains("poef is connecting") ||
        value.contains("connecting to poef") || value.contains("waiting for") ||
-       value.contains("to show your") || value.contains("screen mirroring")) return true;
+       value.contains("to show your")) return true;
     for(int i=0;i<node.getChildCount();i++) if(hasIdlePageLabel(node.getChild(i))) return true;
     return false;
   }

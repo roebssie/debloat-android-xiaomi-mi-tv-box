@@ -53,7 +53,7 @@ public class AirplayAccessibility extends AccessibilityService {
     if(videoWasActive){
       AccessibilityNodeInfo current=activeRoot();
       boolean stateChanged=type==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED;
-      if((current!=null && hasIdlePageLabel(current)) || (current==null && stateChanged)) activateHomeMask();
+      if(stateChanged || (current!=null && hasIdlePageLabel(current))) activateHomeMask();
       else handler.postDelayed(delayedVideoMask,VIDEO_MASK_DELAY_MS);
     } else activateHomeMask();
     menuDeadline=SystemClock.uptimeMillis()+(videoWasActive?VIDEO_RECONFIG_WINDOW_MS:MENU_CHECK_WINDOW_MS);

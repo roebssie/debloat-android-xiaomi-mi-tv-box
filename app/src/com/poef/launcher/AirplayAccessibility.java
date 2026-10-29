@@ -23,12 +23,14 @@ public class AirplayAccessibility extends AccessibilityService {
   private static final long MENU_CHECK_DELAY_MS = 40L;
   private static final long MENU_CHECK_WINDOW_MS = 4500L;
   private static final long VIDEO_RECONFIG_WINDOW_MS = 4500L;
+  private static final long RECEIVER_GONE_GRACE_MS = 900L;
   private static final long DISMISS_COOLDOWN_MS = 200L;
   private final Handler handler = new Handler(Looper.getMainLooper());
   private long lastDismissAt;
   private long menuDeadline;
   private long videoSurfaceSince;
   private long idleLabelSince;
+  private long receiverGoneSince;
   private boolean videoWasActive;
   private boolean audioWasActive;
   private WindowManager windowManager;
@@ -52,7 +54,23 @@ public class AirplayAccessibility extends AccessibilityService {
     long now=SystemClock.uptimeMillis();
     if(now-lastDismissAt < DISMISS_COOLDOWN_MS) return;
     AccessibilityNodeInfo root=activeRoot();
-    if(root==null){ if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS); else deactivateHomeMask(); return; }
+    if(root==null){
+      if(videoWasActive || audioWasActive){
+        if(receiverGoneSince==0) receiverGoneSince=now;
+        if(now-receiverGoneSince>=RECEIVER_GONE_GRACE_MS){
+          videoWasActive=false;
+          audioWasActive=false;
+          receiverGoneSince=0;
+          lastDismissAt=now;
+          goHome();
+          releaseHomeMaskLater();
+          return;
+        }
+      } else receiverGoneSince=0;
+      if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS); else deactivateHomeMask();
+      return;
+    }
+    receiverGoneSince=0;
     if(containsVideoSurface(root)){
       videoWasActive=true;
       audioWasActive=false;
@@ -63,35 +81,47 @@ public class AirplayAccessibility extends AccessibilityService {
       return;
     }
     videoSurfaceSince=0;
-    if(!hasReceiverLabel(root)){
+    boolean audioActive=sideplayAudioActive();
+    if(audioActive){
+      audioWasActive=true;
       idleLabelSince=0;
+      lastDismissAt=now;
+      goHome();
+      releaseHomeMaskLater();
+      return;
+    }
+    if(!hasReceiverLabel(root)){
+      if(videoWasActive || audioWasActive){
+        if(receiverGoneSince==0) receiverGoneSince=now;
+        if(now-receiverGoneSince>=RECEIVER_GONE_GRACE_MS){
+          videoWasActive=false;
+          audioWasActive=false;
+          receiverGoneSince=0;
+          lastDismissAt=now;
+          goHome();
+          releaseHomeMaskLater();
+          return;
+        }
+      } else { receiverGoneSince=0; idleLabelSince=0; }
       if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS);
       else deactivateHomeMask();
       return;
     }
-    if(!sideplayAudioActive()){
-      if(idleLabelSince==0) idleLabelSince=now;
-      // Once video or audio has ended, dismiss a stable receiver-ready page promptly.
-      // A short stability check filters transient rotation/reconnect frames while
-      // keeping the page from becoming visible during a real disconnect.
-      if((videoWasActive || audioWasActive) && now-idleLabelSince>=160){
-        videoWasActive=false;
-        audioWasActive=false;
-        idleLabelSince=0;
-        lastDismissAt=now;
-        goHome();
-        releaseHomeMaskLater();
-        return;
-      }
-      if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS);
-      else deactivateHomeMask();
+    if(idleLabelSince==0) idleLabelSince=now;
+    // Once video or audio has ended, dismiss a stable receiver-ready page promptly.
+    // A short stability check filters transient rotation/reconnect frames while
+    // keeping the page from becoming visible during a real disconnect.
+    if((videoWasActive || audioWasActive) && now-idleLabelSince>=160){
+      videoWasActive=false;
+      audioWasActive=false;
+      idleLabelSince=0;
+      lastDismissAt=now;
+      goHome();
+      releaseHomeMaskLater();
       return;
     }
-    idleLabelSince=0;
-    audioWasActive=true;
-    lastDismissAt=now;
-    goHome();
-    releaseHomeMaskLater();
+    if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS);
+    else deactivateHomeMask();
   }
 
   void goHome(){

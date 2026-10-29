@@ -50,6 +50,18 @@ public class AirplayAccessibility extends AccessibilityService {
        type!=AccessibilityEvent.TYPE_WINDOWS_CHANGED &&
        type!=AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) return;
     handler.removeCallbacks(delayedVideoMask);
+    if(videoWasActive && type==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED && !sideplayAudioActive()){
+      AccessibilityNodeInfo current=activeRoot();
+      if(current==null || !containsVideoSurface(current)){
+        activateHomeMask();
+        videoWasActive=false;
+        audioWasActive=false;
+        lastDismissAt=SystemClock.uptimeMillis();
+        goHome();
+        releaseHomeMaskLater();
+        return;
+      }
+    }
     if(videoWasActive){
       AccessibilityNodeInfo current=activeRoot();
       boolean stateChanged=type==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED;

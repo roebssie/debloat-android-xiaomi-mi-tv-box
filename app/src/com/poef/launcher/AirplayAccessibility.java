@@ -21,13 +21,16 @@ import android.view.accessibility.AccessibilityEvent;
 public class AirplayAccessibility extends AccessibilityService {
   private static final String SIDEPLAY = "io.github.sudnep.sideplay";
   private static final long MENU_CHECK_DELAY_MS = 40L;
-  private static final long MENU_CHECK_WINDOW_MS = 1800L;
+  private static final long MENU_CHECK_WINDOW_MS = 4500L;
+  private static final long VIDEO_RECONFIG_WINDOW_MS = 4500L;
   private static final long DISMISS_COOLDOWN_MS = 200L;
   private final Handler handler = new Handler(Looper.getMainLooper());
   private long lastDismissAt;
   private long menuDeadline;
   private long videoSurfaceSince;
+  private long idleLabelSince;
   private boolean videoWasActive;
+  private boolean audioWasActive;
   private WindowManager windowManager;
   private HomeMask homeMask;
   private final Runnable menuCheck = new Runnable(){ public void run(){ dismissIdleMenuIfPresent(); }};
@@ -40,7 +43,7 @@ public class AirplayAccessibility extends AccessibilityService {
        type!=AccessibilityEvent.TYPE_WINDOWS_CHANGED &&
        type!=AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) return;
     activateHomeMask();
-    menuDeadline=SystemClock.uptimeMillis()+MENU_CHECK_WINDOW_MS;
+    menuDeadline=SystemClock.uptimeMillis()+(videoWasActive?VIDEO_RECONFIG_WINDOW_MS:MENU_CHECK_WINDOW_MS);
     handler.removeCallbacks(menuCheck);
     handler.postDelayed(menuCheck, MENU_CHECK_DELAY_MS);
   }
@@ -52,29 +55,40 @@ public class AirplayAccessibility extends AccessibilityService {
     if(root==null){ if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS); else deactivateHomeMask(); return; }
     if(containsVideoSurface(root)){
       videoWasActive=true;
+      audioWasActive=false;
       if(videoSurfaceSince==0) videoSurfaceSince=now;
+      idleLabelSince=0;
       if(now-videoSurfaceSince<120){ handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS); return; }
       deactivateHomeMask();
       return;
     }
     videoSurfaceSince=0;
     if(!hasReceiverLabel(root)){
+      idleLabelSince=0;
       if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS);
       else deactivateHomeMask();
       return;
     }
     if(!sideplayAudioActive()){
-      if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS);
-      else {
-        if(videoWasActive){
-          videoWasActive=false;
-          lastDismissAt=now;
-          goHome();
-          releaseHomeMaskLater();
-        } else deactivateHomeMask();
+      if(idleLabelSince==0) idleLabelSince=now;
+      // Once video or audio has ended, dismiss a stable receiver-ready page promptly.
+      // A short stability check filters transient rotation/reconnect frames while
+      // keeping the page from becoming visible during a real disconnect.
+      if((videoWasActive || audioWasActive) && now-idleLabelSince>=160){
+        videoWasActive=false;
+        audioWasActive=false;
+        idleLabelSince=0;
+        lastDismissAt=now;
+        goHome();
+        releaseHomeMaskLater();
+        return;
       }
+      if(now<menuDeadline) handler.postDelayed(menuCheck,MENU_CHECK_DELAY_MS);
+      else deactivateHomeMask();
       return;
     }
+    idleLabelSince=0;
+    audioWasActive=true;
     lastDismissAt=now;
     goHome();
     releaseHomeMaskLater();

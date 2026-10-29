@@ -108,6 +108,15 @@ public class AirplayAccessibility extends AccessibilityService {
       return;
     }
     if(idleLabelSince==0) idleLabelSince=now;
+    if(hasIdlePageLabel(root) && now-idleLabelSince>=160){
+      videoWasActive=false;
+      audioWasActive=false;
+      idleLabelSince=0;
+      lastDismissAt=now;
+      goHome();
+      releaseHomeMaskLater();
+      return;
+    }
     // Once video or audio has ended, dismiss a stable receiver-ready page promptly.
     // A short stability check filters transient rotation/reconnect frames while
     // keeping the page from becoming visible during a real disconnect.
@@ -159,6 +168,16 @@ public class AirplayAccessibility extends AccessibilityService {
        value.contains("is ready") ||
        value.contains("airplay")) return true;
     for(int i=0;i<node.getChildCount();i++) if(hasReceiverLabel(node.getChild(i))) return true;
+    return false;
+  }
+
+  boolean hasIdlePageLabel(AccessibilityNodeInfo node){
+    if(node==null)return false;
+    String value=readText(node);
+    if(value.contains("poef is ready") || value.contains("poef is connecting") ||
+       value.contains("connecting to poef") || value.contains("waiting for") ||
+       value.contains("to show your") || value.contains("screen mirroring")) return true;
+    for(int i=0;i<node.getChildCount();i++) if(hasIdlePageLabel(node.getChild(i))) return true;
     return false;
   }
 

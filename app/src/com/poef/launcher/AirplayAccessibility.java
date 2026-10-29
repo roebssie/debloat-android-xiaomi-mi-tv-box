@@ -50,8 +50,11 @@ public class AirplayAccessibility extends AccessibilityService {
        type!=AccessibilityEvent.TYPE_WINDOWS_CHANGED &&
        type!=AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) return;
     handler.removeCallbacks(delayedVideoMask);
-    if(videoWasActive) handler.postDelayed(delayedVideoMask,VIDEO_MASK_DELAY_MS);
-    else activateHomeMask();
+    if(videoWasActive){
+      AccessibilityNodeInfo current=activeRoot();
+      if(current!=null && hasIdlePageLabel(current)) activateHomeMask();
+      else handler.postDelayed(delayedVideoMask,VIDEO_MASK_DELAY_MS);
+    } else activateHomeMask();
     menuDeadline=SystemClock.uptimeMillis()+(videoWasActive?VIDEO_RECONFIG_WINDOW_MS:MENU_CHECK_WINDOW_MS);
     handler.removeCallbacks(menuCheck);
     handler.postDelayed(menuCheck, MENU_CHECK_DELAY_MS);
@@ -167,6 +170,7 @@ public class AirplayAccessibility extends AccessibilityService {
   void goHome(){
     Intent home=new Intent(Intent.ACTION_MAIN);
     home.addCategory(Intent.CATEGORY_HOME);
+    home.putExtra("poef_quick_home",true);
     home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_NO_ANIMATION);
     try { startActivity(home); } catch(Exception ignored) {}
     performGlobalAction(GLOBAL_ACTION_HOME);

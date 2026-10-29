@@ -21,7 +21,7 @@ import android.view.accessibility.AccessibilityEvent;
 public class AirplayAccessibility extends AccessibilityService {
   private static final String SIDEPLAY = "io.github.sudnep.sideplay";
   private static final long MENU_CHECK_DELAY_MS = 40L;
-  private static final long MENU_CHECK_WINDOW_MS = 4500L;
+  private static final long MENU_CHECK_WINDOW_MS = 12000L;
   private static final long VIDEO_RECONFIG_WINDOW_MS = 4500L;
   private static final long RECEIVER_GONE_GRACE_MS = 1800L;
   private static final long VIDEO_MASK_DELAY_MS = 250L;

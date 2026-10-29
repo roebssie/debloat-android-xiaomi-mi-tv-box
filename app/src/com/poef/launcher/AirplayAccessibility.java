@@ -23,7 +23,7 @@ public class AirplayAccessibility extends AccessibilityService {
   private static final long MENU_CHECK_DELAY_MS = 40L;
   private static final long MENU_CHECK_WINDOW_MS = 4500L;
   private static final long VIDEO_RECONFIG_WINDOW_MS = 4500L;
-  private static final long RECEIVER_GONE_GRACE_MS = 900L;
+  private static final long RECEIVER_GONE_GRACE_MS = 1800L;
   private static final long VIDEO_MASK_DELAY_MS = 250L;
   private static final long DISMISS_COOLDOWN_MS = 200L;
   private final Handler handler = new Handler(Looper.getMainLooper());
@@ -39,7 +39,7 @@ public class AirplayAccessibility extends AccessibilityService {
   private final Runnable menuCheck = new Runnable(){ public void run(){ dismissIdleMenuIfPresent(); }};
   private final Runnable delayedVideoMask = new Runnable(){ public void run(){
     AccessibilityNodeInfo root=activeRoot();
-    if(root==null || !containsVideoSurface(root)) activateHomeMask();
+    if(root!=null && hasIdlePageLabel(root)) activateHomeMask();
   }};
 
   public void onAccessibilityEvent(AccessibilityEvent event){
@@ -98,6 +98,17 @@ public class AirplayAccessibility extends AccessibilityService {
       return;
     }
     if(!hasReceiverLabel(root)){
+      // Sideplay exposes the live mirror as a full-screen generic view rather
+      // than a SurfaceView/TextureView. Treat that text-free, non-interactive
+      // window as video so the picture is revealed as soon as it attaches.
+      if(!hasInteractiveControl(root)){
+        videoWasActive=true;
+        audioWasActive=false;
+        receiverGoneSince=0;
+        if(videoSurfaceSince==0) videoSurfaceSince=now;
+        deactivateHomeMask();
+        return;
+      }
       if(videoWasActive || audioWasActive){
         if(receiverGoneSince==0) receiverGoneSince=now;
         if(now-receiverGoneSince>=RECEIVER_GONE_GRACE_MS){

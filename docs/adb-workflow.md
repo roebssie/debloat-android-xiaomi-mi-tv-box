@@ -32,9 +32,9 @@ adb shell dumpsys activity services io.github.sudnep.sideplay
 adb shell appops get io.github.sudnep.sideplay
 ```
 
-Expected state: Poef Home is resumed, Sideplay is only a background AirPlay service, and picture-in-picture is denied so its visible activity cannot take over.
+Expected state: Poef Home is resumed, Sideplay is only a background AirPlay service advertising as `poef`, and picture-in-picture is denied so its visible activity cannot take over. Sideplay's overlay permission must remain allowed so video connections open directly to the mirror surface instead of showing an “open Sideplay” prompt.
 
-The launcher uses two layers for the AirPlay handoff: an accessibility window guard that returns Home immediately when Sideplay reports a visible window, plus a 20 ms task-state fallback. The receiver service stays enabled; only its visible activity is sent away.
+The launcher uses a scoped accessibility window guard for receiver pages, while the receiver itself handles the final disconnect callback. Audio remains on the Poef Home banner; a real mirror surface is allowed to render, and a disconnect returns to the existing Home task without replaying the receiver's idle page or boot splash.
 
 ## Verification checklist
 
@@ -42,6 +42,7 @@ The launcher uses two layers for the AirPlay handoff: an accessibility window gu
 - Home, Back, Select, D-pad, Wi-Fi tile, volume, and app launch/return paths.
 - Spotify media banner appears only while Spotify is active.
 - Audio-only AirPlay uses the compact `AirPlay audio` banner and never a full-screen Sideplay menu.
+- Screen mirroring appears directly on connection, remains visible through orientation changes, and returns directly to Poef Home on disconnect.
 - Five-minute idle transition to `PoefDream`.
 - No fatal launcher exception or ANR in logcat.
 - Repeated Sideplay handoff attempts return to Poef Home while the AirPlay service remains foreground-active.

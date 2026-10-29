@@ -24,6 +24,7 @@ public class AirplayAccessibility extends AccessibilityService {
   private static final long MENU_CHECK_WINDOW_MS = 4500L;
   private static final long VIDEO_RECONFIG_WINDOW_MS = 4500L;
   private static final long RECEIVER_GONE_GRACE_MS = 900L;
+  private static final long VIDEO_MASK_DELAY_MS = 250L;
   private static final long DISMISS_COOLDOWN_MS = 200L;
   private final Handler handler = new Handler(Looper.getMainLooper());
   private long lastDismissAt;
@@ -36,6 +37,10 @@ public class AirplayAccessibility extends AccessibilityService {
   private WindowManager windowManager;
   private HomeMask homeMask;
   private final Runnable menuCheck = new Runnable(){ public void run(){ dismissIdleMenuIfPresent(); }};
+  private final Runnable delayedVideoMask = new Runnable(){ public void run(){
+    AccessibilityNodeInfo root=activeRoot();
+    if(root==null || !containsVideoSurface(root)) activateHomeMask();
+  }};
 
   public void onAccessibilityEvent(AccessibilityEvent event){
     if(event==null || event.getPackageName()==null) return;
@@ -44,7 +49,9 @@ public class AirplayAccessibility extends AccessibilityService {
     if(type!=AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
        type!=AccessibilityEvent.TYPE_WINDOWS_CHANGED &&
        type!=AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) return;
-    activateHomeMask();
+    handler.removeCallbacks(delayedVideoMask);
+    if(videoWasActive) handler.postDelayed(delayedVideoMask,VIDEO_MASK_DELAY_MS);
+    else activateHomeMask();
     menuDeadline=SystemClock.uptimeMillis()+(videoWasActive?VIDEO_RECONFIG_WINDOW_MS:MENU_CHECK_WINDOW_MS);
     handler.removeCallbacks(menuCheck);
     handler.postDelayed(menuCheck, MENU_CHECK_DELAY_MS);
@@ -224,6 +231,7 @@ public class AirplayAccessibility extends AccessibilityService {
 
   public void onDestroy(){
     handler.removeCallbacks(menuCheck);
+    handler.removeCallbacks(delayedVideoMask);
     removeHomeMask();
     super.onDestroy();
   }
